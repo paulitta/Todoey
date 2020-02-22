@@ -10,7 +10,7 @@ import UIKit
 
 class TodoListViewController: UITableViewController {
     
-    let itemArray = ["Estudiar iOS", "Mañana festejar cumple de Die", "Comer cosas ricas :)"]
+    var itemArray = ["Estudiar iOS", "Mañana festejar cumple de Die", "Comer cosas ricas :)"]
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -51,6 +51,37 @@ class TodoListViewController: UITableViewController {
         
     }
     
+    //MARK - Add New Items
+    
+    
+    @IBAction func addButtonPressed(_ sender: UIBarButtonItem) {
+        
+        var textField = UITextField()
+        
+        //estas líneas arman la alerta
+        let alert = UIAlertController(title: "Add New Todoey Item", message: "", preferredStyle: .alert)
+        
+        //acción del botón que guarda lo escrito en la alerta
+        let action = UIAlertAction(title: "Add Item", style: .default) { (action) in
+            //what will happen once the user clicks the Add Item button on our UIAlert
+            
+            self.itemArray.append(textField.text!)
+            
+            self.tableView.reloadData() //para que el dato nuevo se vea reflejado en la tabla
+        }
+        
+        //campo donde escribir en la alerta
+        alert.addTextField { (alertTextField) in
+            alertTextField.placeholder = "Create new item"
+            textField = alertTextField
+        }
+        
+        alert.addAction(action)
+        
+        //para presentar la alerta
+        present(alert, animated: true, completion: nil)
+        
+    }
     
     
 }
