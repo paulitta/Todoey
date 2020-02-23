@@ -12,8 +12,16 @@ class TodoListViewController: UITableViewController {
     
     var itemArray = ["Estudiar iOS", "Mañana festejar cumple de Die", "Comer cosas ricas :)"]
     
+    let defaults = UserDefaults.standard //esto sirve para que persistan ciertos datos en memoria
+    
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        //se escribe de este modo por las dudas que no exista "TodoListArray"
+        if let items = defaults.array(forKey: "TodoListArray") as? [String] {
+            
+            itemArray = items
+        }
         
     }
 
@@ -66,6 +74,8 @@ class TodoListViewController: UITableViewController {
             //what will happen once the user clicks the Add Item button on our UIAlert
             
             self.itemArray.append(textField.text!)
+            
+            self.defaults.set(self.itemArray, forKey: "TodoListArray")
             
             self.tableView.reloadData() //para que el dato nuevo se vea reflejado en la tabla
         }
