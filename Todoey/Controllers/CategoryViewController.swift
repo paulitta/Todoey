@@ -7,13 +7,13 @@
 //
 
 import UIKit
-import CoreData
+import RealmSwift
 
 class CategoryViewController: UITableViewController {
 
-    var categories = [Categoria]()
+    let realm = try! Realm()
     
-    let context2 = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
+    var categories: Results<Category>? //una colección. categories es una variable de resultados cuando leemos en la base de datos. Con ? hago que las categorías sean opcionales
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -25,14 +25,14 @@ class CategoryViewController: UITableViewController {
 //MARK: - Tableview Datasource Methods
 
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return categories.count
+        return categories?.count ?? 1 //como Results puede ser opcional, si es nulo, que devuelva 1
     }
     
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         
         let cellCategory = tableView.dequeueReusableCell(withIdentifier: "CategoryCell", for: indexPath)
         
-            cellCategory.textLabel?.text = categories[indexPath.row].name
+            cellCategory.textLabel?.text = categories?[indexPath.row].name ?? "No Categories Added yet"
         
         return cellCategory
         
@@ -51,7 +51,7 @@ class CategoryViewController: UITableViewController {
         let destinationVC = segue.destination as! TodoListViewController
         
         if let indexPath = tableView.indexPathForSelectedRow {
-            destinationVC.selectedCategory = categories[indexPath.row]
+            destinationVC.selectedCategory = categories?[indexPath.row]
         }
         
     }
@@ -59,25 +59,23 @@ class CategoryViewController: UITableViewController {
 
 //MARK: - Data Manipulation Methods
     
-    func saveCategory() {
+    func save(category: Category) {
         
         do {
-            try context2.save()
+            try realm.write {
+                realm.add(category)
+            }
         } catch {
-            print("Error saving context, \(error)")
+            print("Error saving category, \(error)")
         }
         
-        self.tableView.reloadData()
+        tableView.reloadData()
         
     }
     
-    func loadCategories(with request : NSFetchRequest<Categoria> = Categoria.fetchRequest()) {
+    func loadCategories() {
          
-         do {
-             categories = try context2.fetch(request) //se recuperan los datos
-         } catch {
-             print("Error fetching data from context, \(error)")
-         }
+        categories = realm.objects(Category.self) //esto trae todos los elementos de nuestro reino que sean objetos de Category
          
          tableView.reloadData()
      }
@@ -91,13 +89,12 @@ class CategoryViewController: UITableViewController {
         
         let alert = UIAlertController(title: "Add New Category", message: "", preferredStyle: .alert)
         
-        let action = UIAlertAction(title: "Add Category", style: .default) { (action) in
+        let action = UIAlertAction(title: "Add", style: .default) { (action) in
             
-            let newCategory = Categoria(context: self.context2)
+            let newCategory = Category()
             newCategory.name = textField.text!
-            self.categories.append(newCategory)
             
-            self.saveCategory()
+            self.save(category: newCategory)
             
         }
         
