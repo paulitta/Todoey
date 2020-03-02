@@ -9,41 +9,42 @@
 import UIKit
 import RealmSwift
 
-class CategoryViewController: UITableViewController {
-
+//hereda de la super clase que invente
+class CategoryViewController: SwipeTableViewController {
+    
     let realm = try! Realm()
     
     var categories: Results<Category>? //una colección. categories es una variable de resultados cuando leemos en la base de datos. Con ? hago que las categorías sean opcionales
     
     override func viewDidLoad() {
         super.viewDidLoad()
-
+        
         loadCategories()
-    
+        
     }
-
-//MARK: - Tableview Datasource Methods
-
+    
+    //MARK: - Tableview Datasource Methods
+    
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         return categories?.count ?? 1 //como Results puede ser opcional, si es nulo, que devuelva 1
     }
     
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         
-        let cellCategory = tableView.dequeueReusableCell(withIdentifier: "CategoryCell", for: indexPath)
+        let cell = super.tableView(tableView, cellForRowAt: indexPath)
         
-            cellCategory.textLabel?.text = categories?[indexPath.row].name ?? "No Categories Added yet"
+        cell.textLabel?.text = categories?[indexPath.row].name ?? "No Categories Added yet"
         
-        return cellCategory
+        return cell
         
     }
     
-//MARK: - Tableview Delegate Methods
+    //MARK: - Tableview Delegate Methods
     
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         
         performSegue(withIdentifier: "goToItems", sender: self)
-   
+        
     }
     
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
@@ -56,8 +57,8 @@ class CategoryViewController: UITableViewController {
         
     }
     
-
-//MARK: - Data Manipulation Methods
+    
+    //MARK: - Data Manipulation Methods
     
     func save(category: Category) {
         
@@ -74,15 +75,34 @@ class CategoryViewController: UITableViewController {
     }
     
     func loadCategories() {
-         
+        
         categories = realm.objects(Category.self) //esto trae todos los elementos de nuestro reino que sean objetos de Category
-         
-         tableView.reloadData()
-     }
+        
+        tableView.reloadData()
+    }
     
     
-//MARK: - Add New Categories
+    //MARK: - Delete Data From Swipe
 
+    override func updateModel(at indexPath: IndexPath) {
+        
+        if let categoryForDeletion = self.categories?[indexPath.row] {
+            
+            do {
+                try self.realm.write {
+                    self.realm.delete(categoryForDeletion)
+                    
+                }
+            } catch {
+                print("Error deleting category, \(error)")
+            }
+            
+        }
+    }
+    
+    
+    //MARK: - Add New Categories
+    
     @IBAction func addButtonPressed(_ sender: UIBarButtonItem) {
         
         var textField = UITextField()
@@ -110,7 +130,5 @@ class CategoryViewController: UITableViewController {
         present(alert, animated: true, completion: nil)
         
     }
-    
-
     
 }

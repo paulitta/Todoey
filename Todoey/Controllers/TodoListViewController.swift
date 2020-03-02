@@ -9,11 +9,12 @@
 import UIKit
 import RealmSwift
 
-class TodoListViewController: UITableViewController {
-    
-    var todoItems: Results<Item>?
+//hereda de la superclase que invente
+class TodoListViewController: SwipeTableViewController {
     
     let realm = try! Realm()
+    
+    var todoItems: Results<Item>?
     
     //Categoria? va a nulo hasta que le viajen los datos de categoria
     var selectedCategory : Category? {
@@ -27,16 +28,14 @@ class TodoListViewController: UITableViewController {
         
     }
     
-    //let defaults = UserDefaults.standard //esto sirve para que persistan ciertos datos en memoria - no lo uso ahora porque cree uno personalizado
-    
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        print(FileManager.default.urls(for: .documentDirectory, in: .userDomainMask))
+        //print(FileManager.default.urls(for: .documentDirectory, in: .userDomainMask))
         
     }
-
-//MARK: - TableView Datasource Methods
+    
+    //MARK: - TableView Datasource Methods
     
     //Armo la cantidad de celdas y las relleno con el array
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
@@ -45,23 +44,23 @@ class TodoListViewController: UITableViewController {
     
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         
-        let cell = tableView.dequeueReusableCell(withIdentifier: "ToDoItemCell", for: indexPath)
+        let cell = super.tableView(tableView, cellForRowAt: indexPath)
         
         if let item = todoItems?[indexPath.row] {
             
             cell.textLabel?.text = item.title
             
             cell.accessoryType = item.done ? .checkmark : .none
- 
+            
         } else {
             
             cell.textLabel?.text = "No Items Added"
         }
-    
+        
         return cell
     }
     
-//MARK: - TableView Delegate Methods
+    //MARK: - TableView Delegate Methods
     
     //Toma la fila seleccionada
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
@@ -86,7 +85,7 @@ class TodoListViewController: UITableViewController {
         
     }
     
-//MARK: - Add New Items
+    //MARK: - Add New Items
     
     @IBAction func addButtonPressed(_ sender: UIBarButtonItem) {
         
@@ -107,14 +106,14 @@ class TodoListViewController: UITableViewController {
                         newItem.dateCreated = Date()
                         currentCategory.items.append(newItem)
                     }
-                
-            } catch {
-                print("Error saving new items, \(error)")
+                    
+                } catch {
+                    print("Error saving new items, \(error)")
+                }
             }
-        }
             
-        self.tableView.reloadData()
-    }
+            self.tableView.reloadData()
+        }
         
         //campo donde escribir en la alerta
         alert.addTextField { (alertTextField) in
@@ -129,15 +128,35 @@ class TodoListViewController: UITableViewController {
         
     }
     
-//MARK: - Model Manipulation Methods
+    //MARK: - Model Manipulation Methods
     
-     func loadItems() {
+    func loadItems() {
         
         todoItems = selectedCategory?.items.sorted(byKeyPath: "title", ascending: true)
         
         tableView.reloadData()
     }
     
+    
+    
+    
+    //MARK: - Delete Data From Swipe
+    
+    override func updateModel(at indexPath: IndexPath) {
+        
+        if let itemForDeletion = todoItems?[indexPath.row] {
+            
+            do {
+                try realm.write {
+                    realm.delete(itemForDeletion)
+                    
+                }
+            } catch {
+                print("Error deleting item, \(error)")
+            }
+            
+        }
+    }
 }
 
 //MARK: - Search bar methods
